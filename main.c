@@ -23,17 +23,22 @@ int range(int,int);
 
 cave* generateCave();
 cavesystem* generateCaveSystem();
+route* generateRoute(cave*,cave*,int,int);
 void printCave(cave*);
+void printRoute(route*);
 
 struct cave{
+	char sizedescription[100];
 	int cavesize;
 	route *routes[MAX_DIR];
 	int entrancesizes[MAX_DIR];
-	char sizedescription[100];
 };
 struct route{
 	//
-	int a;
+	int time;
+	char routetype[100];
+	cave* cavea;
+	cave* caveb;
 	//
 };
 struct cavesystem{
@@ -54,7 +59,7 @@ int main(){
 	strcpy(dir[5],"Down");
 
 	//Main menu
-	printf("Welcome to the Veins of the Earth semi-autonomout GM.\n");
+	printf("Welcome to the Veins of the Earth semi-autonomous GM.\n");
 	printf("Please select an option.\n");
 	printf("A: Generate a cave system\n");
 	printf("B: Read a cave system\n");
@@ -70,7 +75,16 @@ int main(){
 			;//just go with it
 			cave *gen = generateCave();
 			printCave(gen);
+
+			cave *gen2 = generateCave();
+			printCave(gen);
+
+			route *gen3 = generateRoute(gen,gen2,0,0);
+			printRoute(gen3);
+			
 			free(gen);
+			free(gen2);
+			free(gen3);
 			break;
 		case 'B' :
 			//read cave
@@ -89,6 +103,8 @@ cavesystem* generateCaveSystem(){
 
 	}
 }
+
+
 
 //Generate one cave and cave exits.
 cave* generateCave(){
@@ -151,6 +167,80 @@ cave* generateCave(){
 	return togen;
 }
 
+route* generateRoute(cave* c1, cave* c2, int exitA, int exitB){
+	//create route
+	route* togen = malloc(sizeof(route));
+	//add caves
+	togen->cavea = c1;
+	togen->caveb = c2;
+	//add this route to the caves in the indicies
+
+	c1->routes[exitA] = togen;
+	c2->routes[exitB] = togen;
+	//TODO: DO WE WANT TO ADD WHICH ENTRANCE THIS ROUTE IS IN THE STRUCT? IE EXIT A OR EXIT B
+
+	//Get length of the route
+	int time = d(4);
+	if(time == 4){
+		int deltatime = d(6);
+		time += deltatime;
+		if(deltatime == 6){
+			deltatime = d(8);
+			time += deltatime;
+			if(deltatime == 8){
+				deltatime = d(10);
+				time += deltatime;
+				if(deltatime == 10){
+					deltatime = d(12);
+					time += deltatime;
+					if(deltatime == 12){
+						do{
+							deltatime = d(20);
+							time += deltatime;
+						}while(deltatime==20);
+					}
+				}
+			}
+		}
+	}
+	togen->time=time;
+
+	//Generate type of route
+	int type = d(4);
+	switch(type){
+		case 1:
+			strcpy(togen->routetype,"This route is a walk or shaft.");
+			break;
+		case 2:
+			strcpy(togen->routetype,"This route is a crawl or chimney.");
+			break;
+		case 3:
+			strcpy(togen->routetype,"This route is a squeeze.");
+			break;
+		case 4:
+			type = d(4);
+			switch(type){
+				case 1:
+					strcpy(togen->routetype,"Traverse: The floor here is dangerous.");
+					break;
+				case 2:
+					strcpy(togen->routetype,"Sump. A river or pool of water.");
+					break;
+				case 3:
+					strcpy(togen->routetype,"Letterbox Squeeze. A very extreme squeeze.");
+					break;
+				case 4:
+					strcpy(togen->routetype,"Breakdown. This route is blocked by fallen rocks.");
+					break;
+			}
+			break;
+	}
+
+	//return the route
+	return togen;
+}
+
+
 //Is just a die
 int d(int diesize){
 	return rand()%diesize + 1;
@@ -167,7 +257,15 @@ void printCave(cave* c){
 	for(int i = 0; i < MAX_DIR; i++){
 		if(c->entrancesizes[i]>0){
 			printf("Exit %s Size: %d feet\n",dir[i],c->entrancesizes[i]);
+
 		}
 	}
+	fflush(stdout);
+}
+//This prints the information for a single route
+void printRoute(route* r){
+	printf("\n\n");
+	printf("%s\n",r->routetype);
+	printf("Route Length: %d minutes\n",r->time*10);
 	fflush(stdout);
 }
