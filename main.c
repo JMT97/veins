@@ -8,7 +8,6 @@
 #define MAX_DIR 6
 #define MAX_ROUTES (MAX_CAVES*MAX_DIR)
 
-//enum directions {north,east,south,west,up,down};
 char dir[6][6];
 
 struct cave;
@@ -45,6 +44,7 @@ struct cavesystem{
 };
 
 int main(){
+	//Initialization
 	srand(time(NULL));
 	strcpy(dir[0],"North");
 	strcpy(dir[1],"East");
@@ -53,16 +53,18 @@ int main(){
 	strcpy(dir[4],"Up");
 	strcpy(dir[5],"Down");
 
-	
+	//Main menu
 	printf("Welcome to the Veins of the Earth semi-autonomout GM.\n");
 	printf("Please select an option.\n");
 	printf("A: Generate a cave system\n");
 	printf("B: Read a cave system\n");
 	fflush(stdout);
 
+	//Get input
 	int input = getchar();
 	input = toupper(input);
 
+	//Do Stuff
 	switch(input){
 		case 'A' :
 			;//just go with it
@@ -77,6 +79,7 @@ int main(){
 
 }
 
+//TODO
 cavesystem* generateCaveSystem(){
 	cavesystem* csys = malloc(sizeof(cavesystem));
 	csys->caves = malloc(sizeof(cave*) * MAX_CAVES);
@@ -87,14 +90,16 @@ cavesystem* generateCaveSystem(){
 	}
 }
 
+//Generate one cave and cave exits.
 cave* generateCave(){
+	//Initialization
 	cave* togen = malloc(sizeof(cave));
-	
 	for(int i=0;i<MAX_DIR;i++){
 		togen->routes[i] = NULL;
 		togen->entrancesizes[i] = 0;
 	}
 
+	//Generate the cave size
 	int size = d(8);
 	switch(size){
 		case 1:
@@ -131,6 +136,7 @@ cave* generateCave(){
 			//gargantuan
 	}
 
+	//Generate exits
 	int roomsum = d(6)+d(6);
 	while(roomsum>1){
 		int wall = d(MAX_DIR)-1;
@@ -145,12 +151,15 @@ cave* generateCave(){
 	return togen;
 }
 
+//Is just a die
 int d(int diesize){
 	return rand()%diesize + 1;
 }
+//This is for being lazy and generating numbers in a range (inclusive,inclusive)
 int range(int start, int end){
-	return start + rand()%(end-start);
+	return start + rand()%(end-start+1);
 }
+//This prints the information for a single cave
 void printCave(cave* c){
 	printf("\n\n");
 	printf("%s\n",c->sizedescription);
