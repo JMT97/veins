@@ -30,6 +30,7 @@ struct cave{
 	int cavesize;
 	route *routes[MAX_DIR];
 	int entrancesizes[MAX_DIR];
+	char sizedescription[100];
 };
 struct route{
 	//
@@ -97,27 +98,35 @@ cave* generateCave(){
 	int size = d(8);
 	switch(size){
 		case 1:
+			strcpy(togen->sizedescription,"A tiny cave, perhaps the size of a cupboard. No more than a junction in the route.");
 			togen->cavesize = range(2,6);
 			break;
 		case 2:
+			strcpy(togen->sizedescription,"Room sized.");
 			togen->cavesize = range(7,15);
 			break;
 		case 3:
+			strcpy(togen->sizedescription,"The size of two rooms.");
 			togen->cavesize = range(16,25);
 			break;
 		case 4:
+			strcpy(togen->sizedescription,"The size of three rooms.");
 			togen->cavesize = range(26,35);
 			break;
 		case 5:
+			strcpy(togen->sizedescription,"The size of four rooms.");
 			togen->cavesize = range(36,45);
 			break;
 		case 6:
+			strcpy(togen->sizedescription,"The size of a house.");
 			togen->cavesize = range(46,60);
 			break;
 		case 7:
+			strcpy(togen->sizedescription,"The size of an office building.");
 			togen->cavesize = range(61,500);
 			break;
 		case 8:
+			strcpy(togen->sizedescription,"A gargantuan cave.");
 			break;
 			//gargantuan
 	}
@@ -143,10 +152,13 @@ int range(int start, int end){
 	return start + rand()%(end-start);
 }
 void printCave(cave* c){
+	printf("\n\n");
+	printf("%s\n",c->sizedescription);
 	printf("Cave Size: %d feet\n",c->cavesize);
 	for(int i = 0; i < MAX_DIR; i++){
 		if(c->entrancesizes[i]>0){
 			printf("Exit %s Size: %d feet\n",dir[i],c->entrancesizes[i]);
 		}
 	}
+	fflush(stdout);
 }
