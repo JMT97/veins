@@ -77,7 +77,7 @@ int main(){
 			printCave(gen);
 
 			cave *gen2 = generateCave();
-			printCave(gen);
+			printCave(gen2);
 
 			route *gen3 = generateRoute(gen,gen2,0,0);
 			printRoute(gen3);
@@ -102,7 +102,7 @@ cavesystem* generateCaveSystem(){
 	for(int i = 0; i < MAX_CAVES; i++){
 
 	}
-	
+
 }
 
 
