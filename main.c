@@ -143,10 +143,12 @@ cavesystem* generateCaveSystem(){
 
 		if(getexit(c1)!=-1 && getexit(c2)!=-1){
 			if( d(100) < (100 - distances[cave1][cave2]) ){
-				route* r = generateRoute(c1,c2,getexit(c1),getexit(c2));
-				r->routeID = csys->numroutes;
-				csys->routes[csys->numroutes] = r;
-				csys->numroutes++;
+				if(c1!=c2 || cave1!=cave2){
+					route* r = generateRoute(c1,c2,getexit(c1),getexit(c2));
+					r->routeID = csys->numroutes;
+					csys->routes[csys->numroutes] = r;
+					csys->numroutes++;
+				}
 			}
 		}
 	}
