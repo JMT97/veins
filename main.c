@@ -3,10 +3,12 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define MAX_CAVES 10
 #define MAX_DIR 6
 #define MAX_ROUTES (MAX_CAVES*MAX_DIR)
+#define NUM_ROUTES MAX_CAVES*2
 
 char dir[6][6];
 
@@ -26,8 +28,11 @@ cavesystem* generateCaveSystem();
 route* generateRoute(cave*,cave*,int,int);
 void printCave(cave*);
 void printRoute(route*);
+void printCaveSystem(cavesystem*);
+int getexit(cave*);
 
 struct cave{
+	int caveID;
 	char sizedescription[100];
 	int cavesize;
 	route *routes[MAX_DIR];
@@ -35,6 +40,7 @@ struct cave{
 };
 struct route{
 	//
+	int routeID;
 	int time;
 	char routetype[100];
 	cave* cavea;
@@ -42,8 +48,8 @@ struct route{
 	//
 };
 struct cavesystem{
-	cave* caves;
-	route* routes;
+	cave** caves;
+	route** routes;
 	int numcaves;
 	int numroutes;
 };
@@ -87,7 +93,11 @@ int main(){
 			free(gen3);
 			break;
 		case 'B' :
-			//read cave
+			;//Just go with it
+			cavesystem *cs = generateCaveSystem();
+			printf("A\n");
+			fflush(stdout);
+			printCaveSystem(cs);
 			break;
 	}
 
@@ -96,13 +106,51 @@ int main(){
 //TODO
 cavesystem* generateCaveSystem(){
 	cavesystem* csys = malloc(sizeof(cavesystem));
+	csys->numcaves = 0;
+	csys->numroutes = 0;
 	csys->caves = malloc(sizeof(cave*) * MAX_CAVES);
 	csys->routes = malloc(sizeof(route*) * MAX_ROUTES);
 
-	for(int i = 0; i < MAX_CAVES; i++){
-
+	for(int i = 0;i<MAX_CAVES;i++){
+		csys->caves[i] = generateCave();
+		csys->caves[i]->caveID = i;
+		csys->numcaves++;
 	}
 
+	int x[MAX_CAVES];
+	int y[MAX_CAVES];
+	int z[MAX_CAVES];
+	for(int i = 0; i < MAX_CAVES; i++){
+		x[i] = d(100);
+		y[i] = d(100);
+		z[i] = d(100);
+	}
+	double distances[MAX_CAVES][MAX_CAVES];
+	for(int i = 0; i < MAX_CAVES; i++){
+		for(int p = 0; p < MAX_CAVES; p++){
+			double delx = (double) x[i] - x[p];
+			double dely = y[i]-y[p];
+			double delz = z[i]-z[p];
+			distances[i][p] = sqrt(delx*delx + dely*dely + delz*delz);
+		}
+	}
+
+	for(int i = 0; i < NUM_ROUTES; i++){
+		int cave1 = d(MAX_CAVES)-1;
+		int cave2 = d(MAX_CAVES)-1;
+		cave *c1 = csys->caves[cave1];
+		cave *c2 = csys->caves[cave2];
+
+		if(getexit(c1)!=-1 && getexit(c2)!=-1){
+			if( d(100) < (100 - distances[cave1][cave2]) ){
+				route* r = generateRoute(c1,c2,getexit(c1),getexit(c2));
+				r->routeID = csys->numroutes;
+				csys->routes[csys->numroutes] = r;
+				csys->numroutes++;
+			}
+		}
+	}
+	return csys;
 }
 
 
@@ -157,10 +205,10 @@ cave* generateCave(){
 	int roomsum = d(6)+d(6);
 	while(roomsum>1){
 		int wall = d(MAX_DIR)-1;
-		while(togen->routes[wall] != NULL){
+		while(togen->entrancesizes[wall] != 0){
 			wall = d(MAX_DIR)-1;
 		}
-		togen->routes[wall] = malloc(sizeof(route));
+		//togen->routes[wall] = NULL;
 		togen->entrancesizes[wall] = roomsum;
 		roomsum = roomsum/2;
 	}
@@ -250,15 +298,31 @@ int d(int diesize){
 int range(int start, int end){
 	return start + rand()%(end-start+1);
 }
+//finds a random exit to a cave if one exists and returns -1 otherwise
+int getexit(cave *c){
+	int startdir = d(MAX_DIR);
+	for(int i = 0; i < MAX_DIR; i++){
+		int dir = (startdir + i)%MAX_DIR;
+		if(c->entrancesizes[dir] != 0 && c->routes[dir]==NULL){
+			return dir;
+		}
+	}
+	return -1;
+}
 //This prints the information for a single cave
 void printCave(cave* c){
 	printf("\n\n");
+	printf("Cave %d.\n",c->caveID);
 	printf("%s\n",c->sizedescription);
 	printf("Cave Size: %d feet\n",c->cavesize);
 	for(int i = 0; i < MAX_DIR; i++){
 		if(c->entrancesizes[i]>0){
-			printf("Exit %s Size: %d feet\n",dir[i],c->entrancesizes[i]);
-
+			if(c->routes[i]!=NULL){
+				printf("Exit %s Size: %d feet. Leads to route %d\n",dir[i],c->entrancesizes[i],c->routes[i]->routeID);
+			}
+			else{
+				printf("Exit %s Size: %d feet\n",dir[i],c->entrancesizes[i]);
+			}
 		}
 	}
 	fflush(stdout);
@@ -266,7 +330,17 @@ void printCave(cave* c){
 //This prints the information for a single route
 void printRoute(route* r){
 	printf("\n\n");
+	printf("Route %d. From cave %d to cave %d.\n",r->routeID,r->cavea->caveID,r->caveb->caveID);
 	printf("%s\n",r->routetype);
 	printf("Route Length: %d minutes\n",r->time*10);
 	fflush(stdout);
+}
+//This prints the information for an entire cave system
+void printCaveSystem(cavesystem* csys){
+	for(int i = 0; i < csys->numcaves; i++){
+		printCave(csys->caves[i]);
+	}
+	for(int i = 0; i < csys->numroutes; i++){
+		printRoute(csys->routes[i]);
+	}
 }
