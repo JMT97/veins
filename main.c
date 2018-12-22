@@ -30,6 +30,7 @@ void printCave(cave*);
 void printRoute(route*);
 void printCaveSystem(cavesystem*);
 int getexit(cave*);
+int looseexits(cavesystem*);
 
 struct cave{
 	int caveID;
@@ -95,7 +96,6 @@ int main(){
 		case 'B' :
 			;//Just go with it
 			cavesystem *cs = generateCaveSystem();
-			printf("A\n");
 			fflush(stdout);
 			printCaveSystem(cs);
 			break;
@@ -135,7 +135,8 @@ cavesystem* generateCaveSystem(){
 		}
 	}
 
-	for(int i = 0; i < NUM_ROUTES; i++){
+	while(looseexits(csys)>5){
+	//for(int i = 0; i < NUM_ROUTES; i++){
 		int cave1 = d(MAX_CAVES)-1;
 		int cave2 = d(MAX_CAVES)-1;
 		cave *c1 = csys->caves[cave1];
@@ -152,6 +153,19 @@ cavesystem* generateCaveSystem(){
 			}
 		}
 	}
+
+	//Pruning Loose exits
+	for(int i = 0; i < csys->numcaves; i++){
+		cave *c = csys->caves[i];
+		if(c!=NULL){
+			for(int e = 0;e<MAX_DIR;e++){
+				if(c->entrancesizes[e]>0 && c->routes[e]==NULL){
+					c->entrancesizes[e]=0;
+				}
+			}
+		}
+	}
+
 	return csys;
 }
 
@@ -310,6 +324,21 @@ int getexit(cave *c){
 		}
 	}
 	return -1;
+}
+//Finds the number of loose entrances
+int looseexits(cavesystem* csys){
+	int exits = 0;
+	for(int i = 0; i < csys->numcaves; i++){
+		cave *c = csys->caves[i];
+		if(c!=NULL){
+			for(int e = 0;e<MAX_DIR;e++){
+				if(c->entrancesizes[e]>0 && c->routes[e]==NULL){
+					exits++;
+				}
+			}
+		}
+	}
+	return exits;
 }
 //This prints the information for a single cave
 void printCave(cave* c){
