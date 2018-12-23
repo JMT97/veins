@@ -8,7 +8,8 @@
 #define MAX_CAVES 10
 #define MAX_DIR 6
 #define MAX_ROUTES (MAX_CAVES*MAX_DIR)
-#define NUM_ROUTES MAX_CAVES*2
+#define MIN_ROUTES (MAX_CAVES+MAX_CAVES/4)
+#define MAX_LOOSE 5
 
 char dir[6][6];
 
@@ -25,12 +26,17 @@ int range(int,int);
 
 cave* generateCave();
 cavesystem* generateCaveSystem();
+cavesystem* generateCaveSystemInterior();
 route* generateRoute(cave*,cave*,int,int);
-void printCave(cave*);
-void printRoute(route*);
-void printCaveSystem(cavesystem*);
 int getexit(cave*);
 int looseexits(cavesystem*);
+int connected(cavesystem*);
+int traversal(cave*,int);
+void destroyCaveSystem(cavesystem*);
+void printCave(cave*);
+void printRoute(route*);
+void printRouteShort(route*);
+void printCaveSystem(cavesystem*);
 
 struct cave{
 	int caveID;
@@ -103,8 +109,20 @@ int main(){
 
 }
 
-//TODO
 cavesystem* generateCaveSystem(){
+	cavesystem *csys = NULL;
+	while(csys==NULL){
+		csys = generateCaveSystemInterior();
+		if(!connected(csys) || csys->numroutes<MIN_ROUTES){
+			printf("Cave system not connected.\n");
+			fflush(stdout);
+			destroyCaveSystem(csys);
+			csys=NULL;
+		}
+	}
+	return csys;
+}
+cavesystem* generateCaveSystemInterior(){
 	cavesystem* csys = malloc(sizeof(cavesystem));
 	csys->numcaves = 0;
 	csys->numroutes = 0;
@@ -135,16 +153,21 @@ cavesystem* generateCaveSystem(){
 		}
 	}
 
-	while(looseexits(csys)>5){
+	while(looseexits(csys)>MAX_LOOSE){
 	//for(int i = 0; i < NUM_ROUTES; i++){
 		int cave1 = d(MAX_CAVES)-1;
 		int cave2 = d(MAX_CAVES)-1;
 		cave *c1 = csys->caves[cave1];
 		cave *c2 = csys->caves[cave2];
+		int dir1 = getexit(c1);
+		int dir2 = getexit(c2);
 
-		if(getexit(c1)!=-1 && getexit(c2)!=-1){
-			if( d(100) < (100 - distances[cave1][cave2]) ){
-				if(c1!=c2 || cave1!=cave2){
+
+		fflush(stdout);
+
+		if(dir1!=-1 && dir2!=-1){
+			if( d(100) < (100*sqrt(3) - distances[cave1][cave2]) ){
+				if(c1!=c2 || dir1!=dir2){
 					route* r = generateRoute(c1,c2,getexit(c1),getexit(c2));
 					r->routeID = csys->numroutes;
 					csys->routes[csys->numroutes] = r;
@@ -168,9 +191,19 @@ cavesystem* generateCaveSystem(){
 
 	return csys;
 }
-
-
-
+void destroyCaveSystem(cavesystem* csys){
+	for(int i = 0; i < csys->numcaves; i++){
+		if(csys->caves[i]!=NULL){
+			free(csys->caves[i]);
+		}
+	}
+	for(int i = 0; i < csys->numroutes; i++){
+		if(csys->routes[i]!=NULL){
+			free(csys->routes[i]);
+		}
+	}
+	free(csys);
+}
 //Generate one cave and cave exits.
 cave* generateCave(){
 	//Initialization
@@ -340,6 +373,73 @@ int looseexits(cavesystem* csys){
 	}
 	return exits;
 }
+//Finds the other end of a tunnel
+int traversal(cave *c, int dir){
+	//Check that route exists
+	if(c->routes[dir]==NULL){
+		return -1;
+	}
+	//Find other end of tunnel
+	route *r = c->routes[dir];
+	if(r->cavea!=NULL && r->cavea != c){
+		return r->cavea->caveID;
+	}
+	else if(r->caveb!=NULL){
+		return r->caveb->caveID;
+	}
+	return -1;
+}
+//Check if a cave system is fully connected
+int connected(cavesystem* csys){
+	int present[MAX_CAVES];
+	int visited[MAX_CAVES];
+	int fringe[MAX_CAVES];
+	for(int i = 0; i < csys->numcaves; i++){
+		if(csys->caves[i]!=NULL){
+			present[i]=1;
+			visited[i]=0;
+		}
+		else{
+			present[i]=0;
+			visited[i]=1;
+		}
+		fringe[i] = 0;
+	}
+	//Traverse the cave system as a tree, marking all caves visited
+	fringe[0] = 1;//Technically should check for present
+	while(1){
+		//check fringe
+		int isone = 0;
+		//Do the tree traversal
+		for(int i = 0; i < MAX_CAVES; i++){
+			if(present[i] && fringe[i]){
+				cave *c = csys->caves[i];
+				isone = 1;
+				fringe[i] = 0;
+				visited[i] = 1;
+				for(int dir = 0; dir < 6; dir++){
+					int nextcave = traversal(c,dir);
+					if(present[nextcave] && !visited[nextcave] && !fringe[nextcave]){
+						fringe[nextcave] = 1;
+					}
+				}
+			}
+		}
+		//Check if the traversal is complete
+		if(!isone){
+			break;
+		}
+	}
+	//Check to see if any caves are not linked
+	int connected = 1;
+	for(int i = 0; i < MAX_CAVES; i++){
+		if(present[i] && !visited[i]){
+			connected = 0;
+		}
+	}
+
+	return connected;
+}
 //This prints the information for a single cave
 void printCave(cave* c){
 	printf("\n\n");
@@ -366,8 +466,14 @@ void printRoute(route* r){
 	printf("Route Length: %d minutes\n",r->time*10);
 	fflush(stdout);
 }
+//This prints Just the routing information for a route
+void printRouteShort(route* r){\
+	printf("%d to %d\n",r->cavea->caveID,r->caveb->caveID);
+	fflush(stdout);
+}
 //This prints the information for an entire cave system
 void printCaveSystem(cavesystem* csys){
+	printf("\n\nCave system has %d caves and %d routes.\n",csys->numcaves,csys->numroutes);
 	for(int i = 0; i < csys->numcaves; i++){
 		printCave(csys->caves[i]);
 	}
