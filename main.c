@@ -20,40 +20,38 @@ int main(){
 	strcpy(dir[4],"Up");
 	strcpy(dir[5],"Down");
 
-	//Main menu
-	printf("Welcome to the Veins of the Earth semi-autonomous GM.\n");
-	printf("Please select an option.\n");
-	printf("A: Generate a cave system\n");
-	printf("B: Read a cave system\n");
-	fflush(stdout);
+	//Welcome Message
+	printf("Welcome to the Veins of the Earth semi-autonomous GM.\n\n");
 
-	//Get input
-	int input = getchar();
-	input = toupper(input);
+	cavesystem *csys;
+	int stillplaying = 1;
+	while(stillplaying){
+		printf("Please select an option.\n");
+		printf("A: Generate a cave system\n");
+		printf("B: Read a cave system\n");
+		printf("C: Exit\n");
+		fflush(stdout);
 
-	//Do Stuff
-	switch(input){
-		case 'A' :
-			;//just go with it
-			cave *gen = generateCave();
-			printCave(gen);
+		//Get input
+		int input = getchar();
+		input = toupper(input);
 
-			cave *gen2 = generateCave();
-			printCave(gen2);
-
-			route *gen3 = generateRoute(gen,gen2,0,0);
-			printRoute(gen3);
-			
-			free(gen);
-			free(gen2);
-			free(gen3);
-			break;
-		case 'B' :
-			;//Just go with it
-			cavesystem *cs = generateCaveSystem();
-			fflush(stdout);
-			printCaveSystem(cs);
-			break;
+		//Do Stuff
+		switch(input){
+			case 'A' :
+				csys = generateCaveSystem();
+				fflush(stdout);
+				printCaveSystem(csys);
+				break;
+			case 'B' :
+				;//Just go with it
+				int startcave = 0;
+				break;
+			case 'C' :
+				destroyCaveSystem(csys);
+				csys = NULL;
+				stillplaying = 0;
+				break; 
+		}
 	}
-
 }

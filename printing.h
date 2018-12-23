@@ -8,4 +8,7 @@ void printRoute(route*);
 void printRouteShort(route*);
 void printCaveSystem(cavesystem*);
 
+void travelCave(cave*);
+void travelRoute(route*,cave*);
+
 #endif
