@@ -9,6 +9,7 @@
 #include "cavestructures.h"
 #include "generation.h"
 #include "printing.h"
+#include "travel.h"
 
 int main(){
 	//Initialization
@@ -26,14 +27,16 @@ int main(){
 	cavesystem *csys;
 	int stillplaying = 1;
 	while(stillplaying){
+		printf("\n\n");
 		printf("Please select an option.\n");
 		printf("A: Generate a cave system\n");
 		printf("B: Read a cave system\n");
-		printf("C: Exit\n");
+		printf("Q: Exit\n");
 		fflush(stdout);
 
 		//Get input
 		int input = getchar();
+		fflush(stdin);
 		input = toupper(input);
 
 		//Do Stuff
@@ -46,12 +49,16 @@ int main(){
 			case 'B' :
 				;//Just go with it
 				int startcave = 0;
+				travelCave(csys->caves[startcave]);
 				break;
-			case 'C' :
+			case 'Q' :
 				destroyCaveSystem(csys);
 				csys = NULL;
 				stillplaying = 0;
-				break; 
+				break;
+			default:
+				printf("Try again.\n");
+				break;
 		}
 	}
 }
